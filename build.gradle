@@ -20,7 +20,8 @@ ext {
     lombokVersion = "1.18.30"
 
     javaProjects = [
-            project(':payment-processor')
+            project(':payment-processor'),
+            project(':payment-processor-auto')
     ]
 }
 
