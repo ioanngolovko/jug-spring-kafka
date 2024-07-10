@@ -1,0 +1,20 @@
+@startuml
+!define SPRITESURL https://raw.githubusercontent.com/plantuml-stdlib/gilbarbara-plantuml-sprites/v1.1/sprites
+!include <cloudinsight/kafka>
+
+node "Node 1" {
+[Payment Processor]
+}
+
+node "Node 2" {
+[Push Sender ]
+}
+
+node "Broker Node" {
+queue "<$kafka>\n  Kafka" as kafka
+"TCP 29092" -- [kafka]
+"Payment Processor" -> [TCP 29092]
+"Push Sender " -> [TCP 29092]
+}
+
+@enduml
