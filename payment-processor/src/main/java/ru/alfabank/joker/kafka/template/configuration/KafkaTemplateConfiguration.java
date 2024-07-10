@@ -1,5 +1,6 @@
 package ru.alfabank.joker.kafka.template.configuration;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -22,7 +23,7 @@ public class KafkaTemplateConfiguration {
 
     @Bean
     @SneakyThrows
-    public ProducerFactory<String, OtpDto> producerFactory() {
+    public ProducerFactory<String, OtpDto> producerFactory(MeterRegistry meterRegistry) {
         Map<String, Object> props = new HashMap<>();
 
         props.put(ProducerConfig.CLIENT_ID_CONFIG, InetAddress.getLocalHost().getHostName());
@@ -30,7 +31,9 @@ public class KafkaTemplateConfiguration {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        return new DefaultKafkaProducerFactory<>(props);
+        DefaultKafkaProducerFactory producerFactory = new DefaultKafkaProducerFactory<>(props);
+        producerFactory.addListener(new MicrometerProducerListener<String, OtpDto>(meterRegistry));
+        return producerFactory;
     }
 
     @Bean
