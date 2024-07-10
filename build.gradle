@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.4'
+}
+
+repositories {
+    mavenCentral()
+}
+
+allprojects {
+    group = 'ru.alfabank.joker'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+ext {
+    lombokVersion = "1.18.30"
+
+    javaProjects = [
+            project(':payment-processor')
+    ]
+}
+
+configure(javaProjects) {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencyManagement {
+        dependencies {
+            dependency "org.projectlombok:lombok:${lombokVersion}"
+        }
+    }
+}
+
+
+
+wrapper {
+    gradleVersion = '8.6'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-bin.zip"
+}

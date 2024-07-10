@@ -1,0 +1,3 @@
+rootProject.name = 'jug-spring-kafka'
+
+include 'payment-processor'
