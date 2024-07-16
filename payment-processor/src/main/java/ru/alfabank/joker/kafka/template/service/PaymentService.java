@@ -36,7 +36,8 @@ public class PaymentService {
 //    }
 
 //    private void sendPushAsync(OtpDto otpDto) {
-//        ProducerRecord<String, OtpDto> producerRecord = new ProducerRecord<>(MY_TOPIC, otpDto);
+//        ProducerRecord<String, OtpDto> producerRecord;
+//        producerRecord = new ProducerRecord<>(MY_TOPIC, otpDto);
 //        kafkaTemplate.send(producerRecord);
 //    }
 //
@@ -50,7 +51,7 @@ public class PaymentService {
 //        kafkaTemplate.send(message);
 //    }
 
-    private OtpDto preparePayment() {
+    private static OtpDto preparePayment() {
         return OtpDto.builder()
                 .sender("payment-processor")
                 .userId("me")

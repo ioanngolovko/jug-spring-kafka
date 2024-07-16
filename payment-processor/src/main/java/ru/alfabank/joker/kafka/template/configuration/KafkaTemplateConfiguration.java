@@ -25,19 +25,19 @@ public class KafkaTemplateConfiguration {
     @SneakyThrows
     public ProducerFactory<String, OtpDto> producerFactory(MeterRegistry meterRegistry) {
         Map<String, Object> props = new HashMap<>();
-
         props.put(ProducerConfig.CLIENT_ID_CONFIG, InetAddress.getLocalHost().getHostName());
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        DefaultKafkaProducerFactory producerFactory = new DefaultKafkaProducerFactory<>(props);
-        producerFactory.addListener(new MicrometerProducerListener<String, OtpDto>(meterRegistry));
+        var producerFactory = new DefaultKafkaProducerFactory<String, OtpDto>(props);
+        producerFactory.addListener(new MicrometerProducerListener<>(meterRegistry));
         return producerFactory;
     }
 
     @Bean
-    public KafkaTemplate<String, OtpDto> kafkaTemplate(ProducerFactory<String, OtpDto> producerFactory) {
+    public KafkaTemplate<String, OtpDto> kafkaTemplate(ProducerFactory<String,
+            OtpDto> producerFactory) {
         KafkaTemplate<String, OtpDto> kafkaTemplate = new KafkaTemplate<>(producerFactory);
         kafkaTemplate.setDefaultTopic(MY_TOPIC);
         return kafkaTemplate;
