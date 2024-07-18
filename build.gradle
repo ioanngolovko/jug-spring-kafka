@@ -21,7 +21,8 @@ ext {
 
     javaProjects = [
             project(':payment-processor'),
-            project(':payment-processor-auto')
+            project(':payment-processor-auto'),
+            project(':push-sender')
     ]
 }
 
