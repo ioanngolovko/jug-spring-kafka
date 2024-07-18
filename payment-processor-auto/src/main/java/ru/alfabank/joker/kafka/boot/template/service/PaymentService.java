@@ -31,11 +31,11 @@ public class PaymentService {
 
     private OtpDto preparePayment() {
         return OtpDto.builder()
-                //.sender("payment-processor") // good example
+                .sender("payment-processor") // good example
                 //.sender("far-sender") // for FireBaseUnavailableException
                 //.sender("unknown-sender") // for RuntimeException
                 //.sender("unknown-sender") // for RuntimeException
-                .sender("locked-sender") // for FireBaseAccountLockedException
+                //.sender("locked-sender") // for FireBaseAccountLockedException
                 .userId("me")
                 .code("my-secret-code")
                 .expireTime(LocalDateTime.now().plusMinutes(1))
