@@ -51,6 +51,7 @@ public class KafkaListenerConfiguration {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
         JsonDeserializer<OtpDto> jsonDeserializer = new JsonDeserializer<>(OtpDto.class);
         jsonDeserializer.setUseTypeHeaders(false);
@@ -77,6 +78,9 @@ public class KafkaListenerConfiguration {
             CommonErrorHandler commonErrorHandler) {
         ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
         containerProperties.setMessageListener(listener);
+        containerProperties.setAckMode(ContainerProperties.AckMode.COUNT_TIME);
+        containerProperties.setAckTime(5000);
+        containerProperties.setAckCount(20);
 
         var listenerContainer = new KafkaMessageListenerContainer<>(factory, containerProperties);
         listenerContainer.setCommonErrorHandler(commonErrorHandler);
@@ -90,6 +94,7 @@ public class KafkaListenerConfiguration {
     ) {
         CommonErrorHandler defaultErrorHandler = defaultErrorHandler(otpKafkaTemplate);
         CommonDelegatingErrorHandler delegatingErrorHandler = new CommonDelegatingErrorHandler(defaultErrorHandler);
+
         delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(deserializationDltTemplate));
         return delegatingErrorHandler;
     }
