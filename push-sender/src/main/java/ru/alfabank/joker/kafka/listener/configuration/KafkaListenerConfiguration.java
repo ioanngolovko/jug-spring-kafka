@@ -59,28 +59,28 @@ public class KafkaListenerConfiguration {
         };
     }
 
-//    @Bean
-//    KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
-//            ConsumerFactory<String, OtpDto> factory,
-//            MessageListener<String, OtpDto> listener) {
-//
-//        ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
-//        containerProperties.setMessageListener(listener);
-//
-//        return new KafkaMessageListenerContainer<>(factory, containerProperties);
-//    }
-
     @Bean
-    ConcurrentMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
+    KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
             ConsumerFactory<String, OtpDto> factory,
-            MessageListener<String, OtpDto> listener
-    ) {
+            MessageListener<String, OtpDto> listener) {
+
         ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
         containerProperties.setMessageListener(listener);
 
-        var container = new ConcurrentMessageListenerContainer<>(factory, containerProperties);
-        container.setConcurrency(4);
-
-        return container;
+        return new KafkaMessageListenerContainer<>(factory, containerProperties);
     }
+
+//    @Bean
+//    ConcurrentMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
+//            ConsumerFactory<String, OtpDto> factory,
+//            MessageListener<String, OtpDto> listener
+//    ) {
+//        ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
+//        containerProperties.setMessageListener(listener);
+//
+//        var container = new ConcurrentMessageListenerContainer<>(factory, containerProperties);
+//        container.setConcurrency(4);
+//
+//        return container;
+//    }
 }
