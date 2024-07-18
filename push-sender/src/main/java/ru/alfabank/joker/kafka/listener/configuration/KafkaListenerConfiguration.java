@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.BytesSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -14,14 +15,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.*;
+import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.util.backoff.ExponentialBackOff;
+import org.springframework.util.backoff.FixedBackOff;
 import ru.alfabank.joker.kafka.listener.dto.OtpDto;
+import ru.alfabank.joker.kafka.listener.exceptions.FireBaseAccountLockedException;
+import ru.alfabank.joker.kafka.listener.exceptions.FireBaseUnavailableException;
 import ru.alfabank.joker.kafka.listener.service.PushService;
 
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
@@ -67,21 +74,90 @@ public class KafkaListenerConfiguration {
     KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
             ConsumerFactory<String, OtpDto> factory,
             MessageListener<String, OtpDto> listener,
-            KafkaTemplate<byte[], byte[]> template) {
-
+            CommonErrorHandler commonErrorHandler) {
         ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
         containerProperties.setMessageListener(listener);
 
         var listenerContainer = new KafkaMessageListenerContainer<>(factory, containerProperties);
-
-        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
-        DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer);
-
-        listenerContainer.setCommonErrorHandler(errorHandler);
-
+        listenerContainer.setCommonErrorHandler(commonErrorHandler);
         return listenerContainer;
     }
 
+    @Bean
+    public CommonErrorHandler commonErrorHandler(
+            KafkaTemplate<byte[], byte[]> deserializationDltTemplate,
+            KafkaTemplate<String, OtpDto> otpKafkaTemplate
+    ) {
+        CommonErrorHandler defaultErrorHandler = defaultErrorHandler(otpKafkaTemplate);
+        CommonDelegatingErrorHandler delegatingErrorHandler = new CommonDelegatingErrorHandler(defaultErrorHandler);
+        delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(deserializationDltTemplate));
+        return delegatingErrorHandler;
+    }
+
+
+    private CommonErrorHandler defaultErrorHandler(
+            KafkaTemplate<String, OtpDto> otpKafkaTemplate
+    ) {
+        DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler(
+                new DeadLetterPublishingRecoverer(otpKafkaTemplate),
+                new FixedBackOff(0, 2)
+        );
+
+        return defaultErrorHandler;
+    }
+
+    private CommonErrorHandler serDeErrorHandler(
+            KafkaTemplate<byte[], byte[]> deserializationDltTemplate
+    ) {
+        DeadLetterPublishingRecoverer serDeRecoverer = new DeadLetterPublishingRecoverer(
+                deserializationDltTemplate,
+                (record, e) -> {
+                    // my-topic.serde.DLT
+                    return new TopicPartition(String.format("%s.%s.%s", MY_TOPIC, "serde", "DLT"), record.partition());
+                });
+        return new DefaultErrorHandler(
+                serDeRecoverer,
+                new FixedBackOff(0, 0)
+        );
+    }
+
+    private LinkedHashMap<Class<? extends Throwable>, CommonErrorHandler> errorHandlingDelegates(
+            KafkaTemplate<byte[], byte[]> deserializationDltTemplate
+    ) {
+        LinkedHashMap<Class<? extends Throwable>, CommonErrorHandler> delegates = new LinkedHashMap<>();
+        delegates.put(DeserializationException.class, serDeErrorHandler(deserializationDltTemplate));
+
+        ExponentialBackOff exponentialBackOff = new ExponentialBackOff(250, 2);
+        exponentialBackOff.setMaxElapsedTime(3000);
+        delegates.put(
+                FireBaseUnavailableException.class,
+                new DefaultErrorHandler(exponentialBackOff)
+        );
+        delegates.put(
+                FireBaseAccountLockedException.class,
+                new CommonContainerStoppingErrorHandler()
+        );
+
+        return delegates;
+    }
+
+    @Bean
+    @SneakyThrows
+    public ProducerFactory<String, OtpDto> otpProducerFactory() {
+        Map<String, Object> props = new HashMap<>();
+
+        props.put(ProducerConfig.CLIENT_ID_CONFIG, InetAddress.getLocalHost().getHostName());
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<String, OtpDto> otpKafkaTemplate(ProducerFactory<String, OtpDto> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
 
     @Bean
     @SneakyThrows

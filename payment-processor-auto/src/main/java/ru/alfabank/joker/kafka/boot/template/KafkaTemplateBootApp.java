@@ -22,7 +22,7 @@ public class KafkaTemplateBootApp {
 
     @Scheduled(fixedDelay = 5000)
     void doYourJob() {
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 1; ++i) {
             paymentService.acceptPayment();
         }
         log.info("Sent new batch");
