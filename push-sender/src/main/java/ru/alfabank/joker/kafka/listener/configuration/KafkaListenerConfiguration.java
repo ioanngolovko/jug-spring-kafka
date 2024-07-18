@@ -42,10 +42,9 @@ public class KafkaListenerConfiguration {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        props.put(
-                JsonDeserializer.TYPE_MAPPINGS,
-                "ru.alfabank.joker.kafka.boot.template.dto.OtpDto:" + OtpDto.class.getCanonicalName()
-        );
+
+        props.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OtpDto.class.getCanonicalName());
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
