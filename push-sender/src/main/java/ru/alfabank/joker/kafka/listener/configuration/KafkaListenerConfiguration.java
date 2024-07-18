@@ -45,6 +45,7 @@ public class KafkaListenerConfiguration {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
         JsonDeserializer<OtpDto> jsonDeserializer = new JsonDeserializer<>(OtpDto.class);
+        jsonDeserializer.setUseTypeHeaders(false);
         ErrorHandlingDeserializer errorHandlingDeserializer = new ErrorHandlingDeserializer(jsonDeserializer);
 
         DefaultKafkaConsumerFactory<String, OtpDto> consumerFactory = new DefaultKafkaConsumerFactory<>(props);
