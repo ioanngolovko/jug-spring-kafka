@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
@@ -58,14 +59,28 @@ public class KafkaListenerConfiguration {
         };
     }
 
-    @Bean
-    KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
-            ConsumerFactory<String, OtpDto> factory,
-            MessageListener<String, OtpDto> listener) {
+//    @Bean
+//    KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
+//            ConsumerFactory<String, OtpDto> factory,
+//            MessageListener<String, OtpDto> listener) {
+//
+//        ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
+//        containerProperties.setMessageListener(listener);
+//
+//        return new KafkaMessageListenerContainer<>(factory, containerProperties);
+//    }
 
+    @Bean
+    ConcurrentMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
+            ConsumerFactory<String, OtpDto> factory,
+            MessageListener<String, OtpDto> listener
+    ) {
         ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
         containerProperties.setMessageListener(listener);
 
-        return new KafkaMessageListenerContainer<>(factory, containerProperties);
+        var container = new ConcurrentMessageListenerContainer<>(factory, containerProperties);
+        container.setConcurrency(4);
+
+        return container;
     }
 }
