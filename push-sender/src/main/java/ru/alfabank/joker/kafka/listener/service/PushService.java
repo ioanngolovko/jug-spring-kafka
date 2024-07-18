@@ -11,7 +11,7 @@ import java.util.Objects;
 public class PushService {
     public void sendPush(OtpDto otpDto) {
         switch (otpDto.sender()) {
-            case "locked-sender": throw new FireBaseAccountLockedException();
+            //case "locked-sender": throw new FireBaseAccountLockedException();
             case "far-sender": throw new FireBaseUnavailableException();
             case "unknown-sender": throw new RuntimeException("Basta");
         }
