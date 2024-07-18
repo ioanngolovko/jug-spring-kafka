@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private final KafkaTemplate<String, OtpDto> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void acceptPayment() {
         OtpDto otpDto = this.preparePayment();
@@ -21,7 +21,7 @@ public class PaymentService {
 
 
     private void sendPushAsync(OtpDto otpDto) {
-        kafkaTemplate.sendDefault(otpDto);
+        kafkaTemplate.sendDefault(1);
     }
 
 

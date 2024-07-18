@@ -4,18 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.BytesSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-import org.springframework.kafka.listener.ContainerProperties;
-import org.springframework.kafka.listener.KafkaMessageListenerContainer;
-import org.springframework.kafka.listener.MessageListener;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.*;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 import ru.alfabank.joker.kafka.listener.dto.OtpDto;
 import ru.alfabank.joker.kafka.listener.service.PushService;
 
@@ -65,12 +66,39 @@ public class KafkaListenerConfiguration {
     @Bean
     KafkaMessageListenerContainer<String, OtpDto> kafkaListenerContainer(
             ConsumerFactory<String, OtpDto> factory,
-            MessageListener<String, OtpDto> listener) {
+            MessageListener<String, OtpDto> listener,
+            KafkaTemplate<byte[], byte[]> template) {
 
         ContainerProperties containerProperties = new ContainerProperties(MY_TOPIC);
         containerProperties.setMessageListener(listener);
 
-        return new KafkaMessageListenerContainer<>(factory, containerProperties);
+        var listenerContainer = new KafkaMessageListenerContainer<>(factory, containerProperties);
+
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(template);
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(recoverer);
+
+        listenerContainer.setCommonErrorHandler(errorHandler);
+
+        return listenerContainer;
+    }
+
+
+    @Bean
+    @SneakyThrows
+    public ProducerFactory<byte[], byte[]> producerFactory() {
+        Map<String, Object> props = new HashMap<>();
+
+        props.put(ProducerConfig.CLIENT_ID_CONFIG, InetAddress.getLocalHost().getHostName());
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
+
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean
+    public KafkaTemplate<byte[], byte[]> kafkaTemplate(ProducerFactory<byte[], byte[]> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 
 //    @Bean
