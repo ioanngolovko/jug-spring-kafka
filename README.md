@@ -10,3 +10,8 @@ Start kafka + zookeeper
 ```shell
 docker-componse start
 ```
+
+
+## Grafana Credentials
+
+admin/admin

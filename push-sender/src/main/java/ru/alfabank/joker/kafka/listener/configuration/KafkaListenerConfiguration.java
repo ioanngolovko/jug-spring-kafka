@@ -1,5 +1,6 @@
 package ru.alfabank.joker.kafka.listener.configuration;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +8,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.BytesSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +43,7 @@ public class KafkaListenerConfiguration {
 
     @Bean
     @SneakyThrows
-    public ConsumerFactory<String, OtpDto> consumerFactory() {
+    public ConsumerFactory<String, OtpDto> consumerFactory(MeterRegistry meterRegistry) {
         Map<String, Object> props = new HashMap<>();
 
         props.put(ConsumerConfig.CLIENT_ID_CONFIG, InetAddress.getLocalHost().getHostName());
@@ -58,6 +58,7 @@ public class KafkaListenerConfiguration {
         ErrorHandlingDeserializer errorHandlingDeserializer = new ErrorHandlingDeserializer(jsonDeserializer);
 
         DefaultKafkaConsumerFactory<String, OtpDto> consumerFactory = new DefaultKafkaConsumerFactory<>(props);
+        consumerFactory.addListener(new MicrometerConsumerListener<>(meterRegistry));
         consumerFactory.setValueDeserializer(errorHandlingDeserializer);
         return consumerFactory;
     }
