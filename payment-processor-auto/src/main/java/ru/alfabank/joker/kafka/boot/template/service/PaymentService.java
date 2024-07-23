@@ -18,7 +18,7 @@ public class PaymentService {
 //        kafkaTemplate.sendDefault(1);
 //    }
 
-    private final KafkaTemplate<String, OtpDto> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void acceptPayment() {
         OtpDto otpDto = this.preparePayment();
@@ -33,7 +33,6 @@ public class PaymentService {
         return OtpDto.builder()
                 .sender("payment-processor") // good example
                 //.sender("far-sender") // for FireBaseUnavailableException
-                //.sender("unknown-sender") // for RuntimeException
                 //.sender("unknown-sender") // for RuntimeException
                 //.sender("locked-sender") // for FireBaseAccountLockedException
                 .userId("me")

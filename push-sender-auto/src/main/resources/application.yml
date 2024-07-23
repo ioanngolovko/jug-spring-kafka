@@ -1,0 +1,25 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      enable-auto-commit: false
+      group-id: "my-group"
+      auto-offset-reset: latest
+      client-id: "IDDQD"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: count_time
+      ack-count: 20
+      ack-time: 5s
+      concurrency: 3
+
+
+
+server:
+  port: 8084
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
