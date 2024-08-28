@@ -94,10 +94,13 @@ public class KafkaListenerConfiguration {
             KafkaTemplate<String, OtpDto> otpKafkaTemplate
     ) {
         CommonErrorHandler defaultErrorHandler = defaultErrorHandler(otpKafkaTemplate);
-        CommonDelegatingErrorHandler delegatingErrorHandler = new CommonDelegatingErrorHandler(defaultErrorHandler);
+//        CommonDelegatingErrorHandler delegatingErrorHandler = new CommonDelegatingErrorHandler(defaultErrorHandler);
+//
+//        delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(deserializationDltTemplate));
+//        return delegatingErrorHandler;
 
-        delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(deserializationDltTemplate));
-        return delegatingErrorHandler;
+        defaultErrorHandler.setAckAfterHandle(false);
+        return defaultErrorHandler;
     }
 
 
