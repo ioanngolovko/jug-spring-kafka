@@ -1,0 +1,17 @@
+@startuml
+!include <cloudinsight/kafka>
+
+queue "Spring" as spring
+queue "<$kafka>\n  Kafka" as kafka
+
+spring -> kafka : 1. Poll
+spring -> spring : 2. No Acks
+
+spring -> kafka : 3. Poll
+spring -> spring : 4. No Acks
+
+spring -> kafka : 5. Poll
+spring -> spring : 6. Found good message
+spring -> kafka : 7. Commit
+
+@enduml

@@ -55,18 +55,17 @@ public class KafkaConfiguration {
 
     @Bean
     public CommonErrorHandler commonErrorHandler(
-            KafkaTemplate<byte[], byte[]> deserializationDltTemplate,
-            KafkaTemplate<String, OtpDto> otpKafkaTemplate
+            KafkaTemplate<Object, Object> kafkaTemplate
     ) {
-        CommonErrorHandler defaultErrorHandler = defaultErrorHandler(otpKafkaTemplate);
+        CommonErrorHandler defaultErrorHandler = defaultErrorHandler(kafkaTemplate);
         CommonDelegatingErrorHandler delegatingErrorHandler = new CommonDelegatingErrorHandler(defaultErrorHandler);
 
-        delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(deserializationDltTemplate));
+        delegatingErrorHandler.setErrorHandlers(errorHandlingDelegates(kafkaTemplate));
         return delegatingErrorHandler;
     }
 
     private static CommonErrorHandler defaultErrorHandler(
-            KafkaTemplate<String, OtpDto> otpKafkaTemplate
+            KafkaTemplate<Object, Object> otpKafkaTemplate
     ) {
         DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler(
                 new DeadLetterPublishingRecoverer(otpKafkaTemplate),
@@ -78,7 +77,7 @@ public class KafkaConfiguration {
 
 
     private CommonErrorHandler serDeErrorHandler(
-            KafkaTemplate<byte[], byte[]> deserializationDltTemplate
+            KafkaTemplate<Object, Object> deserializationDltTemplate
     ) {
         DeadLetterPublishingRecoverer serDeRecoverer = new DeadLetterPublishingRecoverer(
                 deserializationDltTemplate,
@@ -93,7 +92,7 @@ public class KafkaConfiguration {
     }
 
     private LinkedHashMap<Class<? extends Throwable>, CommonErrorHandler> errorHandlingDelegates(
-            KafkaTemplate<byte[], byte[]> deserializationDltTemplate
+            KafkaTemplate<Object, Object> deserializationDltTemplate
     ) {
         LinkedHashMap<Class<? extends Throwable>, CommonErrorHandler> delegates = new LinkedHashMap<>();
         delegates.put(DeserializationException.class, serDeErrorHandler(deserializationDltTemplate));
