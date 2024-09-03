@@ -1,16 +1,17 @@
 package ru.alfabank.joker.kafka.boot.template.config;
 
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.support.converter.JsonMessageConverter;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 
 
 @Configuration
 public class KafkaTemplateConfiguration {
 
     @Bean
-    DefaultKafkaProducerFactoryCustomizer serializerCustomizer() {
-        return producerFactory -> producerFactory.setValueSerializer(new JsonSerializer<>());
+    JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
+        return new StringJsonMessageConverter(objectMapper);
     }
 }

@@ -2,6 +2,8 @@ package ru.alfabank.joker.kafka.boot.template.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import ru.alfabank.joker.kafka.boot.template.dto.OtpDto;
 
@@ -19,14 +21,13 @@ public class PaymentService {
 //    }
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-
     public void acceptPayment() {
-        OtpDto otpDto = this.preparePayment();
-        this.sendPushAsync(otpDto);
+        Message<OtpDto> otpDtoMessage = MessageBuilder.withPayload(preparePayment()).build();
+        this.sendPushAsync(otpDtoMessage);
     }
 
-        private void sendPushAsync(OtpDto otpDto) {
-        kafkaTemplate.sendDefault(otpDto);
+    private void sendPushAsync(Message<OtpDto> message) {
+        kafkaTemplate.send(message);
     }
 
     private OtpDto preparePayment() {

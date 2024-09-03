@@ -1,56 +1,26 @@
 package ru.alfabank.joker.kafka.boot.listener.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.Serializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaConsumerFactoryCustomizer;
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.*;
-import org.springframework.kafka.support.serializer.*;
+import org.springframework.kafka.support.converter.ConversionException;
+import org.springframework.kafka.support.converter.JsonMessageConverter;
 import org.springframework.util.backoff.ExponentialBackOff;
 import org.springframework.util.backoff.FixedBackOff;
-import ru.alfabank.joker.kafka.boot.listener.dto.OtpDto;
 import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseAccountLockedException;
 import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseUnavailableException;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Configuration
 public class KafkaConfiguration {
 
     @Bean
-    DefaultKafkaConsumerFactoryCustomizer consumerFactoryCustomizer() {
-        return consumerFactory -> {
-            JsonDeserializer<OtpDto> jsonDeserializer = new JsonDeserializer<>(OtpDto.class);
-            jsonDeserializer.setUseTypeHeaders(false);
-            ErrorHandlingDeserializer errorHandlingDeserializer = new ErrorHandlingDeserializer(jsonDeserializer);
-            consumerFactory.setValueDeserializer(errorHandlingDeserializer);
-        };
-    }
-
-    @Bean
-    DefaultKafkaProducerFactoryCustomizer serializerCustomizer() {
-        Serializer keySerializer = new DelegatingByTypeSerializer(Map.of(
-                byte[].class, new ByteArraySerializer(),
-                String.class, new StringSerializer()
-        ));
-        Serializer valueSerializer = new DelegatingByTypeSerializer(Map.of(
-                byte[].class, new ByteArraySerializer(),
-                OtpDto.class, new JsonSerializer<>()
-        ));
-
-        return producerFactory -> {
-            DefaultKafkaProducerFactory<Object, Object> factory
-                    = (DefaultKafkaProducerFactory<Object, Object>)producerFactory;
-            factory.setKeySerializer(keySerializer);
-            factory.setValueSerializer(valueSerializer);
-        };
+    JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
+        return new JsonMessageConverter(objectMapper);
     }
 
     @Bean
@@ -95,7 +65,7 @@ public class KafkaConfiguration {
             KafkaTemplate<Object, Object> deserializationDltTemplate
     ) {
         LinkedHashMap<Class<? extends Throwable>, CommonErrorHandler> delegates = new LinkedHashMap<>();
-        delegates.put(DeserializationException.class, serDeErrorHandler(deserializationDltTemplate));
+        delegates.put(ConversionException.class, serDeErrorHandler(deserializationDltTemplate));
 
         ExponentialBackOff exponentialBackOff = new ExponentialBackOff(250, 2);
         exponentialBackOff.setMaxElapsedTime(3000);
@@ -110,7 +80,5 @@ public class KafkaConfiguration {
 
         return delegates;
     }
-
-
 
 }
