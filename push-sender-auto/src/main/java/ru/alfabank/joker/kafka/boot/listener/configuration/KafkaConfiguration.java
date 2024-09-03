@@ -13,9 +13,11 @@ import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 import org.springframework.kafka.support.converter.ConversionException;
 import org.springframework.kafka.support.converter.JsonMessageConverter;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
+import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;
+import org.springframework.kafka.support.mapping.Jackson2JavaTypeMapper;
 import org.springframework.util.backoff.ExponentialBackOff;
 import org.springframework.util.backoff.FixedBackOff;
-import ru.alfabank.joker.kafka.boot.listener.dto.OtpDto;
+import ru.alfabank.joker.kafka.boot.dto.OtpDto;
 import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseAccountLockedException;
 import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseUnavailableException;
 
@@ -28,7 +30,15 @@ public class KafkaConfiguration {
 
     @Bean
     JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
-        return new StringJsonMessageConverter(objectMapper);
+        JsonMessageConverter messageConverter = new StringJsonMessageConverter(objectMapper);
+
+        Jackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();
+        typeMapper.addTrustedPackages("ru.alfabank.joker.kafka.boot.dto");
+        typeMapper.setTypePrecedence(Jackson2JavaTypeMapper.TypePrecedence.TYPE_ID);
+
+        messageConverter.setTypeMapper(typeMapper);
+
+        return messageConverter;
     }
 
     @Bean

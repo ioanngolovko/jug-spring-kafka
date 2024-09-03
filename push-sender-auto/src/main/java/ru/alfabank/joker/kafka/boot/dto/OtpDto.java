@@ -1,4 +1,4 @@
-package ru.alfabank.joker.kafka.boot.template.dto;
+package ru.alfabank.joker.kafka.boot.dto;
 
 import lombok.Builder;
 

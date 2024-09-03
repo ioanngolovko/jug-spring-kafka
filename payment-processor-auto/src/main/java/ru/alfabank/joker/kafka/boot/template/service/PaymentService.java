@@ -5,7 +5,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import ru.alfabank.joker.kafka.boot.template.dto.OtpDto;
+import ru.alfabank.joker.kafka.boot.dto.GiveMeYourMoneyDto;
+import ru.alfabank.joker.kafka.boot.dto.OtpDto;
 
 import java.time.LocalDateTime;
 
@@ -23,10 +24,17 @@ public class PaymentService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     public void acceptPayment() {
         Message<OtpDto> otpDtoMessage = MessageBuilder.withPayload(preparePayment()).build();
+        Message<GiveMeYourMoneyDto> giveMeYourMoneyMessage = MessageBuilder.withPayload(
+                new GiveMeYourMoneyDto("user", "Время выплат по кредиту!")
+        ).build();
+        Message<String> randomDtoMessage = MessageBuilder.withPayload("I'm not expected").build();
+
         this.sendPushAsync(otpDtoMessage);
+        this.sendPushAsync(giveMeYourMoneyMessage);
+        this.sendPushAsync(randomDtoMessage);
     }
 
-    private void sendPushAsync(Message<OtpDto> message) {
+    private void sendPushAsync(Message message) {
         kafkaTemplate.send(message);
     }
 

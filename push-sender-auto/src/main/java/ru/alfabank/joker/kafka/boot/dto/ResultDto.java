@@ -1,4 +1,4 @@
-package ru.alfabank.joker.kafka.boot.listener.dto;
+package ru.alfabank.joker.kafka.boot.dto;
 
 public record ResultDto(
     String userId,

@@ -1,8 +1,7 @@
 package ru.alfabank.joker.kafka.boot.listener.service;
 
 import org.springframework.stereotype.Service;
-import ru.alfabank.joker.kafka.boot.listener.dto.OtpDto;
-import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseAccountLockedException;
+import ru.alfabank.joker.kafka.boot.dto.OtpDto;
 import ru.alfabank.joker.kafka.boot.listener.exceptions.FireBaseUnavailableException;
 
 @Service
