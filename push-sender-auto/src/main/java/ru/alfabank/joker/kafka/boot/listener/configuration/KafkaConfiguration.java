@@ -12,6 +12,7 @@ import org.springframework.kafka.listener.*;
 import org.springframework.kafka.listener.adapter.RecordFilterStrategy;
 import org.springframework.kafka.support.converter.ConversionException;
 import org.springframework.kafka.support.converter.JsonMessageConverter;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 import org.springframework.util.backoff.ExponentialBackOff;
 import org.springframework.util.backoff.FixedBackOff;
 import ru.alfabank.joker.kafka.boot.listener.dto.OtpDto;
@@ -27,7 +28,7 @@ public class KafkaConfiguration {
 
     @Bean
     JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
-        return new JsonMessageConverter(objectMapper);
+        return new StringJsonMessageConverter(objectMapper);
     }
 
     @Bean
