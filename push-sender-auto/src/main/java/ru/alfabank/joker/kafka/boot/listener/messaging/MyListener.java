@@ -19,7 +19,7 @@ import ru.alfabank.joker.kafka.boot.listener.service.PushService;
 public class MyListener {
     private final PushService pushService;
 
-    @KafkaListener(topics = {"my-topic"})
+    @KafkaListener(topics = {"my-topic"}, filter = "otpFilterStrategy")
     public void listen(OtpDto otpDto, ConsumerRecordMetadata metadata) {
         log.info("Received from {}-{}-{}", metadata.topic(), metadata.partition(), metadata.offset());
         this.pushService.sendPush(otpDto);
